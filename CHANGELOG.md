@@ -1,3 +1,12 @@
+## [v0.6.0]
+> March 15, 2020
+
+- Change delete flag by disable flag
+- Readapted tests to fit with the new flag
+- Replace `.delete` methods with the `.disable` new ones
+- Replace `deletedAt` and `deletedBy` references with `disabledAt` and `disabledBy` respectively
+- Updated docs to check with the new implementation
+
 ## [v0.5.1]
 > September 3, 2019
 

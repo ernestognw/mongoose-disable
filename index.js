@@ -1,279 +1,339 @@
-var mongoose = require('mongoose'),
-    Schema = mongoose.Schema,
-    Model = mongoose.Model,
-    util = require('util');
+const mongoose = require("mongoose"),
+  Schema = mongoose.Schema,
+  Model = mongoose.Model,
+  util = require("util");
 
 /**
  * This code is taken from official mongoose repository
  * https://github.com/Automattic/mongoose/blob/master/lib/query.js#L3847-L3873
  */
 /* istanbul ignore next */
-function parseUpdateArguments (conditions, doc, options, callback) {
-    if ('function' === typeof options) {
-        // .update(conditions, doc, callback)
-        callback = options;
-        options = null;
-    } else if ('function' === typeof doc) {
-        // .update(doc, callback);
-        callback = doc;
-        doc = conditions;
-        conditions = {};
-        options = null;
-    } else if ('function' === typeof conditions) {
-        // .update(callback)
-        callback = conditions;
-        conditions = undefined;
-        doc = undefined;
-        options = undefined;
-    } else if (typeof conditions === 'object' && !doc && !options && !callback) {
-        // .update(doc)
-        doc = conditions;
-        conditions = undefined;
-        options = undefined;
-        callback = undefined;
-    }
+function parseUpdateArguments(conditions, doc, options, callback) {
+  if ("function" === typeof options) {
+    // .update(conditions, doc, callback)
+    callback = options;
+    options = null;
+  } else if ("function" === typeof doc) {
+    // .update(doc, callback);
+    callback = doc;
+    doc = conditions;
+    conditions = {};
+    options = null;
+  } else if ("function" === typeof conditions) {
+    // .update(callback)
+    callback = conditions;
+    conditions = undefined;
+    doc = undefined;
+    options = undefined;
+  } else if (typeof conditions === "object" && !doc && !options && !callback) {
+    // .update(doc)
+    doc = conditions;
+    conditions = undefined;
+    options = undefined;
+    callback = undefined;
+  }
 
-    var args = [];
+  const args = [];
 
-    if (conditions) args.push(conditions);
-    if (doc) args.push(doc);
-    if (options) args.push(options);
-    if (callback) args.push(callback);
+  if (conditions) args.push(conditions);
+  if (doc) args.push(doc);
+  if (options) args.push(options);
+  if (callback) args.push(callback);
 
-    return args;
+  return args;
 }
 
-function parseIndexFields (options) {
-    var indexFields = {
-        deleted: false,
-        deletedAt: false,
-        deletedBy: false
-    };
+function parseIndexFields(options) {
+  const indexFields = {
+    disabled: false,
+    disabledAt: false,
+    disabledBy: false
+  };
 
-    if (!options.indexFields) {
-        return indexFields;
-    }
-
-    if ((typeof options.indexFields === 'string' || options.indexFields instanceof String) && options.indexFields === 'all') {
-        indexFields.deleted = indexFields.deletedAt = indexFields.deletedBy = true;
-    }
-
-    if (typeof(options.indexFields) === "boolean" && options.indexFields === true) {
-        indexFields.deleted = indexFields.deletedAt = indexFields.deletedBy = true;
-    }
-
-    if (Array.isArray(options.indexFields)) {
-        indexFields.deleted = options.indexFields.indexOf('deleted') > -1;
-        indexFields.deletedAt = options.indexFields.indexOf('deletedAt') > -1;
-        indexFields.deletedBy = options.indexFields.indexOf('deletedBy') > -1;
-    }
-
+  if (!options.indexFields) {
     return indexFields;
+  }
+
+  if (
+    (typeof options.indexFields === "string" ||
+      options.indexFields instanceof String) &&
+    options.indexFields === "all"
+  ) {
+    indexFields.disabled = indexFields.disabledAt = indexFields.disabledBy = true;
+  }
+
+  if (
+    typeof options.indexFields === "boolean" &&
+    options.indexFields === true
+  ) {
+    indexFields.disabled = indexFields.disabledAt = indexFields.disabledBy = true;
+  }
+
+  if (Array.isArray(options.indexFields)) {
+    indexFields.disabled = options.indexFields.indexOf("disabled") > -1;
+    indexFields.disabledAt = options.indexFields.indexOf("disabledAt") > -1;
+    indexFields.disabledBy = options.indexFields.indexOf("disabledBy") > -1;
+  }
+
+  return indexFields;
 }
 
-function createSchemaObject (typeKey, typeValue, options) {
-    options[typeKey] = typeValue;
-    return options;
+function createSchemaObject(typeKey, typeValue, options) {
+  options[typeKey] = typeValue;
+  return options;
 }
 
-module.exports = function (schema, options) {
-    options = options || {};
-    var indexFields = parseIndexFields(options);
+module.exports = function(schema, options) {
+  options = options || {};
+  const indexFields = parseIndexFields(options);
 
-    var typeKey = schema.options.typeKey;
-    var mongooseMajorVersion = +mongoose.version[0]; // 4, 5...
-    var mainUpdateMethod = mongooseMajorVersion < 5 ? 'update' : 'updateMany';
-    schema.add({ deleted: createSchemaObject(typeKey, Boolean, { default: false, index: indexFields.deleted }) });
+  const typeKey = schema.options.typeKey;
+  const mongooseMajorVersion = +mongoose.version[0]; // 4, 5...
+  const mainUpdateMethod = mongooseMajorVersion < 5 ? "update" : "updateMany";
+  schema.add({
+    disabled: createSchemaObject(typeKey, Boolean, {
+      default: false,
+      index: indexFields.disabled
+    })
+  });
 
-    if (options.deletedAt === true) {
-        schema.add({ deletedAt: createSchemaObject(typeKey, Date, { index: indexFields.deletedAt }) });
-    }
-
-    if (options.deletedBy === true) {
-        schema.add({ deletedBy: createSchemaObject(typeKey, options.deletedByType || Schema.Types.ObjectId, { index: indexFields.deletedBy }) });
-    }
-
-    var use$neOperator = true;
-    if (options.use$neOperator !== undefined && typeof options.use$neOperator === "boolean") {
-        use$neOperator = options.use$neOperator;
-    }
-
-    schema.pre('save', function (next) {
-        if (!this.deleted) {
-            this.deleted = false;
-        }
-        next();
+  if (options.disabledAt === true) {
+    schema.add({
+      disabledAt: createSchemaObject(typeKey, Date, {
+        index: indexFields.disabledAt
+      })
     });
+  }
 
-    if (options.overrideMethods) {
-        var overrideItems = options.overrideMethods;
-        var overridableMethods = ['count', 'countDocuments', 'find', 'findOne', 'findOneAndUpdate', 'update', 'updateMany'];
-        var finalList = [];
+  if (options.disabledBy === true) {
+    schema.add({
+      disabledBy: createSchemaObject(
+        typeKey,
+        options.disabledByType || Schema.Types.ObjectId,
+        { index: indexFields.disabledBy }
+      )
+    });
+  }
 
-        if ((typeof overrideItems === 'string' || overrideItems instanceof String) && overrideItems === 'all') {
-            finalList = overridableMethods;
-        }
+  let use$neOperator = true;
+  if (
+    options.use$neOperator !== undefined &&
+    typeof options.use$neOperator === "boolean"
+  ) {
+    use$neOperator = options.use$neOperator;
+  }
 
-        if (typeof(overrideItems) === "boolean" && overrideItems === true) {
-            finalList = overridableMethods;
-        }
+  schema.pre("save", function(next) {
+    if (!this.disabled) {
+      this.disabled = false;
+    }
+    next();
+  });
 
-        if (Array.isArray(overrideItems)) {
-            overrideItems.forEach(function(method) {
-                if (overridableMethods.indexOf(method) > -1) {
-                    finalList.push(method);
-                }
-            });
-        }
+  if (options.overrideMethods) {
+    const overrideItems = options.overrideMethods;
+    const overridableMethods = [
+      "count",
+      "countDocuments",
+      "find",
+      "findOne",
+      "findOneAndUpdate",
+      "update",
+      "updateMany"
+    ];
+    let finalList = [];
 
-        finalList.forEach(function(method) {
-            if (['count', 'countDocuments', 'find', 'findOne'].indexOf(method) > -1) {
-                var modelMethodName = method;
-
-                // countDocuments do not exist in Mongoose v4
-                /* istanbul ignore next */
-                if (mongooseMajorVersion < 5 && method === 'countDocuments' && typeof Model.countDocuments !== 'function') {
-                    modelMethodName = 'count';
-                }
-
-                schema.statics[method] = function () {
-                    if (use$neOperator) {
-                        return Model[modelMethodName].apply(this, arguments).where('deleted').ne(true);
-                    } else {
-                        return Model[modelMethodName].apply(this, arguments).where({deleted: false});
-                    }
-                };
-                schema.statics[method + 'Deleted'] = function () {
-                    if (use$neOperator) {
-                        return Model[modelMethodName].apply(this, arguments).where('deleted').ne(false);
-                    } else {
-                        return Model[modelMethodName].apply(this, arguments).where({deleted: true});
-                    }
-                };
-                schema.statics[method + 'WithDeleted'] = function () {
-                    return Model[modelMethodName].apply(this, arguments);
-                };
-            } else {
-                schema.statics[method] = function () {
-                    var args = parseUpdateArguments.apply(undefined, arguments);
-
-                    if (use$neOperator) {
-                        args[0].deleted = {'$ne': true};
-                    } else {
-                        args[0].deleted = false;
-                    }
-
-                    return Model[method].apply(this, args);
-                };
-
-                schema.statics[method + 'Deleted'] = function () {
-                    var args = parseUpdateArguments.apply(undefined, arguments);
-
-                    if (use$neOperator) {
-                        args[0].deleted = {'$ne': false};
-                    } else {
-                        args[0].deleted = true;
-                    }
-
-                    return Model[method].apply(this, args);
-                };
-
-                schema.statics[method + 'WithDeleted'] = function () {
-                    return Model[method].apply(this, arguments);
-                };
-            }
-        });
+    if (
+      (typeof overrideItems === "string" || overrideItems instanceof String) &&
+      overrideItems === "all"
+    ) {
+      finalList = overridableMethods;
     }
 
-    schema.methods.delete = function (deletedBy, cb) {
-        if (typeof deletedBy === 'function') {
-          cb = deletedBy;
-          deletedBy = null;
+    if (typeof overrideItems === "boolean" && overrideItems === true) {
+      finalList = overridableMethods;
+    }
+
+    if (Array.isArray(overrideItems)) {
+      overrideItems.forEach(function(method) {
+        if (overridableMethods.indexOf(method) > -1) {
+          finalList.push(method);
+        }
+      });
+    }
+
+    finalList.forEach(function(method) {
+      if (["count", "countDocuments", "find", "findOne"].indexOf(method) > -1) {
+        const modelMethodName = method;
+
+        // countDocuments do not exist in Mongoose v4
+        /* istanbul ignore next */
+        if (
+          mongooseMajorVersion < 5 &&
+          method === "countDocuments" &&
+          typeof Model.countDocuments !== "function"
+        ) {
+          modelMethodName = "count";
         }
 
-        this.deleted = true;
+        schema.statics[method] = function() {
+          if (use$neOperator) {
+            return Model[modelMethodName]
+              .apply(this, arguments)
+              .where("disabled")
+              .ne(true);
+          } else {
+            return Model[modelMethodName]
+              .apply(this, arguments)
+              .where({ disabled: false });
+          }
+        };
+        schema.statics[method + "Disabled"] = function() {
+          if (use$neOperator) {
+            return Model[modelMethodName]
+              .apply(this, arguments)
+              .where("disabled")
+              .ne(false);
+          } else {
+            return Model[modelMethodName]
+              .apply(this, arguments)
+              .where({ disabled: true });
+          }
+        };
+        schema.statics[method + "WithDisabled"] = function() {
+          return Model[modelMethodName].apply(this, arguments);
+        };
+      } else {
+        schema.statics[method] = function() {
+          const args = parseUpdateArguments.apply(undefined, arguments);
 
-        if (schema.path('deletedAt')) {
-            this.deletedAt = new Date();
-        }
+          if (use$neOperator) {
+            args[0].disabled = { $ne: true };
+          } else {
+            args[0].disabled = false;
+          }
 
-        if (schema.path('deletedBy')) {
-            this.deletedBy = deletedBy;
-        }
-
-        if (options.validateBeforeDelete === false) {
-            return this.save({ validateBeforeSave: false }, cb);
-        }
-
-        return this.save(cb);
-    };
-
-    schema.statics.delete =  function (conditions, deletedBy, callback) {
-        if (typeof deletedBy === 'function') {
-            callback = deletedBy;
-            conditions = conditions;
-            deletedBy = null;
-        } else if (typeof conditions === 'function') {
-            callback = conditions;
-            conditions = {};
-            deletedBy = null;
-        }
-
-        var doc = {
-            deleted: true
+          return Model[method].apply(this, args);
         };
 
-        if (schema.path('deletedAt')) {
-            doc.deletedAt = new Date();
-        }
+        schema.statics[method + "Disabled"] = function() {
+          const args = parseUpdateArguments.apply(undefined, arguments);
 
-        if (schema.path('deletedBy')) {
-            doc.deletedBy = deletedBy;
-        }
+          if (use$neOperator) {
+            args[0].disabled = { $ne: false };
+          } else {
+            args[0].disabled = true;
+          }
 
-        if (this.updateWithDeleted) {
-            return this.updateWithDeleted(conditions, doc, { multi: true }, callback);
-        } else {
-            return this[mainUpdateMethod](conditions, doc, { multi: true }, callback);
-        }
-    };
-
-    schema.statics.deleteById =  function (id, deletedBy, callback) {
-        if (arguments.length === 0 || typeof id === 'function') {
-            var msg = 'First argument is mandatory and must not be a function.';
-            throw new TypeError(msg);
-        }
-
-        var conditions = {
-            _id: id
+          return Model[method].apply(this, args);
         };
 
-        return this.delete(conditions, deletedBy, callback);
-    };
-
-    schema.methods.restore = function (callback) {
-        this.deleted = false;
-        this.deletedAt = undefined;
-        this.deletedBy = undefined;
-        return this.save(callback);
-    };
-
-    schema.statics.restore =  function (conditions, callback) {
-        if (typeof conditions === 'function') {
-            callback = conditions;
-            conditions = {};
-        }
-
-        var doc = {
-            deleted: false,
-            deletedAt: undefined,
-            deletedBy: undefined
+        schema.statics[method + "WithDisabled"] = function() {
+          return Model[method].apply(this, arguments);
         };
+      }
+    });
+  }
 
-        if (this.updateWithDeleted) {
-            return this.updateWithDeleted(conditions, doc, { multi: true }, callback);
-        } else {
-            return this[mainUpdateMethod](conditions, doc, { multi: true }, callback);
-        }
+  schema.methods.disable = function(disabledBy, cb) {
+    if (typeof disabledBy === "function") {
+      cb = disabledBy;
+      disabledBy = null;
+    }
+
+    this.disabled = true;
+
+    if (schema.path("disabledAt")) {
+      this.disabledAt = new Date();
+    }
+
+    if (schema.path("disabledBy")) {
+      this.disabledBy = disabledBy;
+    }
+
+    if (options.validateBeforeDisable === false) {
+      return this.save({ validateBeforeSave: false }, cb);
+    }
+
+    return this.save(cb);
+  };
+
+  schema.statics.disable = function(conditions, disabledBy, callback) {
+    if (typeof disabledBy === "function") {
+      callback = disabledBy;
+      conditions = conditions;
+      disabledBy = null;
+    } else if (typeof conditions === "function") {
+      callback = conditions;
+      conditions = {};
+      disabledBy = null;
+    }
+
+    const doc = {
+      disabled: true
     };
+
+    if (schema.path("disabledAt")) {
+      doc.disabledAt = new Date();
+    }
+
+    if (schema.path("disabledBy")) {
+      doc.disabledBy = disabledBy;
+    }
+
+    if (this.updateWithDisabled) {
+      return this.updateWithDisabled(
+        conditions,
+        doc,
+        { multi: true },
+        callback
+      );
+    } else {
+      return this[mainUpdateMethod](conditions, doc, { multi: true }, callback);
+    }
+  };
+
+  schema.statics.disableById = function(id, disabledBy, callback) {
+    if (arguments.length === 0 || typeof id === "function") {
+      const msg = "First argument is mandatory and must not be a function.";
+      throw new TypeError(msg);
+    }
+
+    const conditions = {
+      _id: id
+    };
+
+    return this.disable(conditions, disabledBy, callback);
+  };
+
+  schema.methods.enable = function(callback) {
+    this.disabled = false;
+    this.disabledAt = undefined;
+    this.disabledBy = undefined;
+    return this.save(callback);
+  };
+
+  schema.statics.enable = function(conditions, callback) {
+    if (typeof conditions === "function") {
+      callback = conditions;
+      conditions = {};
+    }
+
+    const doc = {
+      disabled: false,
+      disabledAt: undefined,
+      disabledBy: undefined
+    };
+
+    if (this.updateWithDisabled) {
+      return this.updateWithDisabled(
+        conditions,
+        doc,
+        { multi: true },
+        callback
+      );
+    } else {
+      return this[mainUpdateMethod](conditions, doc, { multi: true }, callback);
+    }
+  };
 };
