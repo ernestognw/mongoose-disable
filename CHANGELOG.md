@@ -6,6 +6,10 @@
 - Replace `.delete` methods with the `.disable` new ones
 - Replace `deletedAt` and `deletedBy` references with `disabledAt` and `disabledBy` respectively
 - Updated docs to check with the new implementation
+- Add eslint configuration
+- Add prettier configuration
+- Add husky configuration
+- Updated tests and package accordingly with eslint, prettier and husky
 
 ## [v0.5.1]
 > September 3, 2019

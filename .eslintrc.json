@@ -1,0 +1,14 @@
+{
+  "env": {
+    "mocha": true
+  },
+  "extends": ["airbnb-base/legacy", "prettier"],
+  "plugins": ["prettier"],
+  "rules": {
+    "yoda": "off",
+    "no-param-reassign": "off",
+    "no-underscore-dangle": "off",
+    "array-callback-return": "off"
+  },
+  "parser": "babel-eslint"
+}

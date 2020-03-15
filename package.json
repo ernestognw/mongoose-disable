@@ -7,7 +7,9 @@
   "scripts": {
     "test": "make test",
     "test-travis": "istanbul cover ./node_modules/mocha/bin/_mocha -- -R spec ./test/*",
-    "test-cov": "nyc --reporter=html --reporter=text ./node_modules/mocha/bin/_mocha -- -R spec ./test/*"
+    "test-cov": "nyc --reporter=html --reporter=text ./node_modules/mocha/bin/_mocha -- -R spec ./test/*",
+    "lint": "eslint",
+    "prettier": "prettier --write \"**/*.js\""
   },
   "repository": {
     "type": "git",
@@ -27,9 +29,22 @@
     "mongoose": "4.x || 5.x"
   },
   "devDependencies": {
+    "babel-eslint": "^10.1.0",
     "chai": "^4.2.0",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^14.1.0",
+    "eslint-config-prettier": "^6.10.0",
+    "eslint-plugin-prettier": "^3.1.2",
+    "husky": "^4.2.3",
     "istanbul": "^0.4.5",
     "mocha": "5.x",
-    "mongoose": "^5"
+    "mongoose": "^5",
+    "prettier": "^1.19.1"
+  },
+  "husky": {
+    "hooks": {
+      "pre-push": "yarn lint .",
+      "pre-commit": "yarn prettier ."
+    }
   }
 }
