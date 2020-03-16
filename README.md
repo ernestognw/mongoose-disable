@@ -15,14 +15,14 @@ Although mongoose-delete is perfect for delete cases, deletion is a different st
   - [Add __disable()__ method on document (do not override standard __remove()__ method)](#simple-usage)
   - [Add __disableById()__ static method](#simple-usage)
   - [Add __disabled__ (true-false) key on document](#simple-usage)
-  - [Add __disabledAt__ key to store time of deletion](#save-time-of-deletion)
+  - [Add __disabledAt__ key to store time of disabling](#save-time-of-disabling)
   - [Add __disabledBy__ key to record who disabled document](#who-has-disabled-the-data)
   - Restore disabled documents using __enable__ method
   - [Bulk disable and enable](#bulk-disabled-and-enable)
   - [Option to override static methods](#examples-how-to-override-one-or-multiple-methods) (__count, countDocuments, find, findOne, findOneAndUpdate, update, updateMany__)
   - [For overridden methods we have two additional methods](#method-overridden): __methodDisabled__ and __methodWithDisabled__
   - [Disable model validation on disabled](#disable-model-validation-on-disabled)
-  - [Option to create index on disabled fields](#create-index-on-fields) (__disabledd__, __disableddAt__, __disableddBy__)
+  - [Option to create index on disabled fields](#create-index-on-fields) (__disabled__, __disabledAt__, __disabledBy__)
   - Option to disable use of `$ne` operator using `{use$neOperator: false}`. Before you start to use this option please check [#50](https://github.com/dsanel/mongoose-delete/issues/50).  
 
 ## Installation
@@ -212,11 +212,11 @@ const Pet = mongoose.model('Pet', PetSchema);
 // Example of usage overridden methods
 
 Pet.find(function (err, documents) {
-  // will return only NOT DELETED documents
+  // will return only NOT DISABLED documents
 });
 
 Pet.findDisabled(function (err, documents) {
-  // will return only DELETED documents
+  // will return only DISABLED documents
 });
 
 Pet.findWithDisabled(function (err, documents) {
