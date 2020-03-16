@@ -10,6 +10,7 @@
 - Add prettier configuration
 - Add husky configuration
 - Updated tests and package accordingly with eslint, prettier and husky
+- Remove tests for node < 10.0.0 versions
 
 ## [v0.5.1]
 > September 3, 2019
