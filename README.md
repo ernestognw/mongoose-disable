@@ -3,8 +3,8 @@ Mongoose Disable Plugin
 
 mongoose-disable is a simple and lightweight plugin that enables document disabling in MongoDB. This code is based on [dsanel](https://github.com/dsanel) plugin [mongoose-delete](https://github.com/dsanel/mongoose-delete)
 
-[![Build Status](https://travis-ci.org/ernestognw/mongoose-disable.svg?branch=master)](https://travis-ci.org/ernestognw/mongoose-disable)
-[![Coverage Status](https://coveralls.io/repos/github/ernestognw/mongoose-disable/badge.svg?branch=master&version=new)](https://coveralls.io/github/ernestognw/mongoose-disable?branch=master)
+[![Build Status](https://travis-ci.com/ernestognw/mongoose-disable.svg?branch=master)](https://travis-ci.com/ernestognw/mongoose-disable)
+[![Coverage Status](https://coveralls.io/repos/github/ernestognw/mongoose-disable/badge.svg?branch=master)](https://coveralls.io/github/ernestognw/mongoose-disable?branch=master)
 
 ## Inspiration
 mongoose-delete is a great implementation of a soft delete mechanism that enables users to hide documents without really deleting them. This isually allows to maintain references from other documents in DB without breaking your whole application.
@@ -20,7 +20,7 @@ Although mongoose-delete is perfect for delete cases, deletion is a different st
   - Restore disabled documents using __enable__ method
   - [Bulk disable and enable](#bulk-disabled-and-enable)
   - [Option to override static methods](#examples-how-to-override-one-or-multiple-methods) (__count, countDocuments, find, findOne, findOneAndUpdate, update, updateMany__)
-  - [For overridden methods we have two additional methods](#method-overridden): __methodDeleted__ and __methodWithDeleted__
+  - [For overridden methods we have two additional methods](#method-overridden): __methodDisabled__ and __methodWithDisabled__
   - [Disable model validation on disabled](#disable-model-validation-on-disabled)
   - [Option to create index on disabled fields](#create-index-on-fields) (__disabledd__, __disableddAt__, __disableddBy__)
   - Option to disable use of `$ne` operator using `{use$neOperator: false}`. Before you start to use this option please check [#50](https://github.com/dsanel/mongoose-delete/issues/50).  
@@ -173,17 +173,17 @@ Pet.enable({age:10}).exec(function (err, result) { ... });
 
 ### Method overridden
 
-We have the option to override all standard methods or only specific methods. Overridden methods will exclude deleted documents from results, documents that have ```disabled = true```. Every overridden method will have two additional methods, so we will be able to work with disabled documents.
+We have the option to override all standard methods or only specific methods. Overridden methods will exclude disabled documents from results, documents that have ```disabled = true```. Every overridden method will have two additional methods, so we will be able to work with disabled documents.
 
-| only not deleted documents | only disabled documents  | all documents               |
+| only not disabled documents | only disabled documents  | all documents               |
 |----------------------------|-------------------------|-----------------------------|
-| count()                    | countDeleted            | countWithDeleted            |
-| countDocuments()           | countDocumentsDeleted   | countDocumentsWithDeleted   |
-| find()                     | findDeleted             | findWithDeleted             |
-| findOne()                  | findOneDeleted          | findOneWithDeleted          |
-| findOneAndUpdate()         | findOneAndUpdateDeleted | findOneAndUpdateWithDeleted |
-| update()                   | updateDeleted           | updateWithDeleted           |
-| updateMany()               | updateManyDeleted       | updateManyWithDeleted       |
+| count()                    | countDisabled            | countWithDisabled            |
+| countDocuments()           | countDocumentsDisabled   | countDocumentsWithDisabled   |
+| find()                     | findDisabled             | findWithDisabled             |
+| findOne()                  | findOneDisabled          | findOneWithDisabled          |
+| findOneAndUpdate()         | findOneAndUpdateDisabled | findOneAndUpdateWithDisabled |
+| update()                   | updateDisabled           | updateWithDisabled           |
+| updateMany()               | updateManyDisabled       | updateManyWithDisabled       |
 
 ### Examples how to override one or multiple methods
 
@@ -215,11 +215,11 @@ Pet.find(function (err, documents) {
   // will return only NOT DELETED documents
 });
 
-Pet.findDeleted(function (err, documents) {
+Pet.findDisabled(function (err, documents) {
   // will return only DELETED documents
 });
 
-Pet.findWithDeleted(function (err, documents) {
+Pet.findWithDisabled(function (err, documents) {
   // will return ALL documents
 });
 
@@ -234,13 +234,13 @@ const PetSchema = new Schema({
     name: { type: String, required: true }
 });
 
-// By default, validateBeforeDelete is set to true
+// By default, validateBeforeDisable is set to true
 PetSchema.plugin(mongooseDisabled);
 // the previous line is identical to next line
-PetSchema.plugin(mongooseDisabled, { validateBeforeDelete: true });
+PetSchema.plugin(mongooseDisabled, { validateBeforeDisable: true });
 
-// To disable model validation on disable, set validateBeforeDelete option to false
-PetSchema.plugin(mongooseDisabled, { validateBeforeDelete: false });
+// To disable model validation on disable, set validateBeforeDisable option to false
+PetSchema.plugin(mongooseDisabled, { validateBeforeDisable: false });
 
 // NOTE: This is based on existing Mongoose validateBeforeSave option
 // http://mongoosejs.com/docs/guide.html#validateBeforeSave
