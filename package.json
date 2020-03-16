@@ -1,6 +1,6 @@
 {
   "name": "mongoose-disable",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Mongoose disable plugin",
   "author": "Ernesto García <ernestognw@gmail.com> (https://github.com/ernestognw)",
   "main": "index.js",
